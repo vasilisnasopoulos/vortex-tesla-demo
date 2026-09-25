@@ -1,0 +1,23 @@
+{
+    "host": "127.0.0.1",
+    "port": 4443,
+    "status_port": 4480,
+    "log_level": "info",
+    "json_log_enable": true,
+    "namespace": "tesla_telemetry",
+    "reliable_ack": false,
+    "use_default_eng_ca": true,
+    "transmit_decoded_records": true,
+    "logger": { "verbose": true },
+    "records": {
+        "V": [ "logger" ],
+        "alerts": [ "logger" ],
+        "errors": [ "logger" ],
+        "connectivity": [ "logger" ]
+    },
+    "tls": {
+        "ca_file": "CERTDIR/certsvehicle_device.CA.cert",
+        "server_cert": "CERTDIR/certsvehicle_device.app.cert",
+        "server_key": "CERTDIR/certsvehicle_device.app.key"
+    }
+}

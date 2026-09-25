@@ -1,0 +1,62 @@
+name: run the demo
+
+# Anyone can run this: fork the repo (or open Actions on this one) and press
+# "Run workflow". It runs on a GitHub-hosted Linux machine with the prebuilt
+# Vortex binary — no source involved — and uploads the three ledgers.
+
+on:
+  workflow_dispatch:
+    inputs:
+      records_per_car:
+        description: "records each car sends"
+        default: "40"
+      period_s:
+        description: "seconds between records"
+        default: "0.3"
+  push:
+    branches: [ main ]
+
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Tesla's server needs libzmq
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq pkg-config libzmq3-dev >/dev/null
+
+      - name: setup (Tesla's proto → Python, clone their repo)
+        run: ./setup.sh
+
+      - name: run the demo (A: no server · B: Tesla's reference server)
+        env:
+          N: ${{ github.event.inputs.records_per_car || '40' }}
+          PERIOD: ${{ github.event.inputs.period_s || '0.3' }}
+        run: |
+          chmod +x bin/* run_demo.sh
+          ./run_demo.sh | tee demo_output.txt
+
+      - name: publish the result on the job summary
+        if: always()
+        run: |
+          { echo '```'; cat demo_output.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: upload the three ledgers and Tesla's server log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ledgers-and-logs
+          path: |
+            run/d*/ledger_node*.txt
+            run/records_*.jsonl
+            run/tesla_server.log
+            demo_output.txt

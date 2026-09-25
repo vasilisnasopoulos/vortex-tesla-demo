@@ -1,0 +1,42 @@
+══════════════════════════════════════════════════════════════════════
+ A) three cars, three Vortex devices, NO server  (Tesla → Tesla → Tesla)
+══════════════════════════════════════════════════════════════════════
+   [t+4.0s] car 3's device went OFF the network
+   [+6s]    car 3's device is BACK
+[5YJ3E1EA1NF000001] produced 40 records; 40 handed to its own device
+[5YJ3E1EA1NF000002] produced 40 records; 40 handed to its own device
+[5YJ3E1EA1NF000003] produced 40 records; 20 handed to its own device, 20 lost while its device was OFF
+   … letting the devices reconcile (anti-entropy every 10 s) …
+
+   device 0: admit=100 witnesses=2
+   device 1: admit=100 witnesses=2
+   device 2: admit=70 witnesses=2
+   [emitter 2] resuming own count at 14 (persisted 14, witness max seq 29)
+
+device  records  digest(seq, hash, body)
+  0        100   76fd4475e0824469
+  1        100   76fd4475e0824469
+  2        100   76fd4475e0824469
+SAME LEDGER, BODY INCLUDED, ON ALL DEVICES: YES
+
+first 6 records as Tesla fleet-telemetry Payloads, in ledger order (device 0):
+  seq    0  vin 5YJ3E1EA1NF000001  speed  61.6  soc 79.98  loc (37.4035, -122.2347)
+  seq    1  vin 5YJ3E1EA1NF000002  speed  57.3  soc 79.98  loc (37.4857, -122.2447)
+  seq    2  vin 5YJ3E1EA1NF000003  speed  59.2  soc 79.98  loc (37.4139, -122.2044)
+  seq    3  vin 5YJ3E1EA1NF000001  speed  62.1  soc 79.96  loc (37.4036, -122.2347)
+  seq    4  vin 5YJ3E1EA1NF000002  speed  61.1  soc 79.96  loc (37.4857, -122.2447)
+  seq    5  vin 5YJ3E1EA1NF000003  speed  64.2  soc 79.96  loc (37.4139, -122.2043)
+
+records per VIN in the shared ledger: {'5YJ3E1EA1NF000001': 40, '5YJ3E1EA1NF000002': 40, '5YJ3E1EA1NF000003': 20}
+
+══════════════════════════════════════════════════════════════════════
+ B) the SAME records the way it works today: Tesla's reference server
+══════════════════════════════════════════════════════════════════════
+[5YJ3E1EA1NF000001] sent 40 records to Tesla's server
+[5YJ3E1EA1NF000003] sent 40 records to Tesla's server
+[5YJ3E1EA1NF000002] sent 40 records to Tesla's server
+   Tesla's server logged, per VIN (connect + records + disconnect):
+     5YJ3E1EA1NF000001: 42 lines
+     5YJ3E1EA1NF000002: 42 lines
+     5YJ3E1EA1NF000003: 42 lines
+   → there, the server is the only holder of the whole picture; the cars never talk to each other.

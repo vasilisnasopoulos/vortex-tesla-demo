@@ -1,0 +1,5 @@
+fleet-telemetry/
+run/
+demo/vehicle_data_pb2.py
+demo/__pycache__/
+*.cast
