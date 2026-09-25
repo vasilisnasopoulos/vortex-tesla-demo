@@ -37,13 +37,13 @@ jobs:
         with:
           go-version: "1.22"
 
-      - name: Tesla's server needs libzmq
+      - name: "Tesla server needs libzmq"
         run: sudo apt-get update -qq && sudo apt-get install -y -qq pkg-config libzmq3-dev >/dev/null
 
-      - name: setup (Tesla's proto → Python, clone their repo)
+      - name: "setup (Tesla proto to Python, clone their repo)"
         run: ./setup.sh
 
-      - name: fetch the Vortex node (read-only deploy key; the key can do nothing else)
+      - name: "fetch the Vortex node (read-only deploy key that can do nothing else)"
         env:
           VXPUB_KEY: ${{ secrets.VXPUB_KEY }}
           VXPUB_HOST: ${{ secrets.VXPUB_HOST }}
@@ -56,7 +56,7 @@ jobs:
           chmod +x bin/vortex_dse_full3-linux-x86_64
           ls -la bin/ && sha256sum bin/vortex_dse_full3-linux-x86_64
 
-      - name: run the demo (A: no server · B: Tesla's reference server)
+      - name: "run the demo (A - no server, B - Tesla reference server)"
         env:
           N: ${{ github.event.inputs.records_per_car || '40' }}
           PERIOD: ${{ github.event.inputs.period_s || '0.3' }}
@@ -69,7 +69,7 @@ jobs:
         run: |
           { echo '```'; cat demo_output.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: upload the three ledgers and Tesla's server log (never the binary)
+      - name: "upload the three ledgers and Tesla server log (never the binary)"
         if: always()
         uses: actions/upload-artifact@v4
         with:
