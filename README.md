@@ -10,6 +10,8 @@ Apache-2.0), produced with their own `vehicle_data.proto`. Part B replays the
 same records through Tesla's reference server — their code, their mTLS
 WebSocket, their envelope — so the two architectures sit side by side.
 
+![the demo](results/demo.gif)
+
 ```
 device  records  digest(seq, hash, body)
   0        100   c27920cdb8c42e7a
@@ -27,33 +29,42 @@ Today (part B) the car talks only to the server — Tesla's README: *"vehicles
 communicate only with the server"* — so the server is the one holder of the
 whole picture. Here (part A) all three cars hold it.
 
-## Run it yourself — three ways
+## See it run
 
-**On GitHub, nothing to install.** Fork this repo → *Actions* → *run the demo* →
-*Run workflow*. It runs on a GitHub machine and prints the result in the job
-summary, with the three ledgers as downloadable artifacts.
+**On GitHub, live:** open [Actions → *run the demo*](../../actions). Every run is
+public: the output is on the run's summary page and the three ledgers are
+downloadable artifacts. It runs every Monday and on every push, so there is
+always a recent one. Full text of one run: [`results/demo_output.txt`](results/demo_output.txt).
 
-**On your machine** (Linux x86_64 or macOS arm64; needs `python3`, `git`;
-`go` optional for part B):
+**Why you cannot just press "Run workflow" on a fork:** the Vortex node is not
+in this repository. The job fetches it during the run from the project's own
+server with a read-only deploy key held in this repository's secrets. Forks do
+not receive secrets. This is deliberate: the node is the thing being evaluated,
+not distributed.
+
+## Getting the node, to run it yourself
+
+Ask. Evaluation copies (Linux x86_64 static, macOS arm64) are given on request
+to people and teams who want to run the demo on their own machines or extend
+it. Then:
 
 ```bash
-./setup.sh      # Tesla's proto → Python, clones their repo
-./run_demo.sh   # ~2 minutes
+./setup.sh                                   # Tesla's proto → Python, clones their repo
+VORTEX_BIN=/path/to/vortex_dse_full3 ./run_demo.sh   # ~2 minutes
 ```
 
-**Watch it:** [`results/demo.gif`](results/demo.gif).
+Needs `python3` and `git`; `go` (and `libzmq`) only for part B.
 
 ## What is in here
 
 | | |
 |---|---|
-| `bin/` | the Vortex node, **binary only** (stripped, static on Linux). Source is not published. |
 | `demo/car.py` | a "car": generates Tesla `Payload` records, hands each to its own Vortex device (`POST /tx` on localhost) |
 | `demo/read_ledger.py` | reads each device's ledger back as Tesla records and compares the devices |
 | `demo/vehicle_client.go` | a vehicle the way Tesla's server expects one (built inside their module, uses their envelope code) |
 | `demo/server_config.json` | Tesla's server with the logger dispatcher |
 | `.github/workflows/demo.yml` | the Actions run |
-| `results/` | one recorded run |
+| `results/` | one recorded run: GIF and text |
 
 ## What the demo does and does not show
 
@@ -70,7 +81,6 @@ summary, with the three ledgers as downloadable artifacts.
 
 ## License
 
-Demo scripts (`demo/`, `setup.sh`, `run_demo.sh`, workflow): MIT.
-The binaries in `bin/` are provided for evaluation only — run them, do not
-redistribute, reverse-engineer or use them in production. See `LICENSE`.
-Tesla's `fleet-telemetry` is Apache-2.0 and is cloned, not vendored.
+Everything in this repository is MIT. The Vortex node is not in this
+repository; evaluation copies come with their own terms.
+Tesla's `fleet-telemetry` is Apache-2.0 and is cloned by `setup.sh`, not vendored.

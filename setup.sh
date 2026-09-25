@@ -12,5 +12,5 @@ echo "ok: demo/vehicle_data_pb2.py generated from Tesla's vehicle_data.proto"
 case "$(uname -s)-$(uname -m)" in
   Linux-x86_64)  echo "binary: bin/vortex_dse_full3-linux-x86_64" ;;
   Darwin-arm64)  echo "binary: bin/vortex_dse_full3-macos-arm64" ;;
-  *) echo "no prebuilt binary for $(uname -s)-$(uname -m) — run the demo on GitHub Actions instead (see README)"; ;;
+  *) echo "no prebuilt binary for $(uname -s)-$(uname -m)" ;;
 esac

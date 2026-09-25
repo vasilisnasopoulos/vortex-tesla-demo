@@ -1,8 +1,12 @@
 name: run the demo
 
-# Anyone can run this: fork the repo (or open Actions on this one) and press
-# "Run workflow". It runs on a GitHub-hosted Linux machine with the prebuilt
-# Vortex binary — no source involved — and uploads the three ledgers.
+# Runs the demo on a GitHub-hosted Linux machine. The Vortex node is NOT in this
+# repository: the job fetches it over SSH from the project's own server using a
+# deploy key kept in this repository's secrets (VXPUB_KEY, VXPUB_HOST). The key
+# unlocks one thing — a read-only copy of the binary — and nothing else.
+# Forks do not receive the secrets, so a fork can read these runs but not the
+# binary. Runs are public: open any run below to see the output and download
+# the ledgers. It also runs on a schedule, so there is always a recent one.
 
 on:
   workflow_dispatch:
@@ -13,6 +17,8 @@ on:
       period_s:
         description: "seconds between records"
         default: "0.3"
+  schedule:
+    - cron: "17 6 * * 1"     # every Monday 06:17 UTC
   push:
     branches: [ main ]
 
@@ -37,12 +43,25 @@ jobs:
       - name: setup (Tesla's proto → Python, clone their repo)
         run: ./setup.sh
 
+      - name: fetch the Vortex node (read-only deploy key; the key can do nothing else)
+        env:
+          VXPUB_KEY: ${{ secrets.VXPUB_KEY }}
+          VXPUB_HOST: ${{ secrets.VXPUB_HOST }}
+        run: |
+          test -n "$VXPUB_KEY" || { echo "no deploy key in this repository's secrets (forks do not get it) — see README"; exit 1; }
+          mkdir -p ~/.ssh bin && chmod 700 ~/.ssh
+          printf '%s\n' "$VXPUB_KEY" > ~/.ssh/vxpub && chmod 600 ~/.ssh/vxpub
+          ssh-keyscan -t ed25519 "$VXPUB_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh -i ~/.ssh/vxpub -o BatchMode=yes "vxpub@$VXPUB_HOST" > bin/vortex_dse_full3-linux-x86_64
+          chmod +x bin/vortex_dse_full3-linux-x86_64
+          ls -la bin/ && sha256sum bin/vortex_dse_full3-linux-x86_64
+
       - name: run the demo (A: no server · B: Tesla's reference server)
         env:
           N: ${{ github.event.inputs.records_per_car || '40' }}
           PERIOD: ${{ github.event.inputs.period_s || '0.3' }}
         run: |
-          chmod +x bin/* run_demo.sh
+          chmod +x run_demo.sh
           ./run_demo.sh | tee demo_output.txt
 
       - name: publish the result on the job summary
@@ -50,7 +69,7 @@ jobs:
         run: |
           { echo '```'; cat demo_output.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: upload the three ledgers and Tesla's server log
+      - name: upload the three ledgers and Tesla's server log (never the binary)
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -60,3 +79,7 @@ jobs:
             run/records_*.jsonl
             run/tesla_server.log
             demo_output.txt
+
+      - name: remove the binary from the runner
+        if: always()
+        run: rm -rf bin ~/.ssh/vxpub

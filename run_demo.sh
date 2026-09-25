@@ -10,11 +10,16 @@
 #        N=60 PERIOD=0.2 ./run_demo.sh
 set -u
 cd "$(dirname "$0")"; ROOT=$PWD
-case "$(uname -s)-$(uname -m)" in
-  Linux-x86_64) BIN=$ROOT/bin/vortex_dse_full3-linux-x86_64 ;;
-  Darwin-arm64) BIN=$ROOT/bin/vortex_dse_full3-macos-arm64 ;;
-  *) echo "no prebuilt binary for this platform — use the GitHub Actions workflow"; exit 2 ;;
-esac
+# The Vortex node is not distributed with this repo. Point VORTEX_BIN at it, or
+# put it in ./bin/ (see README: how to get it, and how the Actions run gets it).
+BIN=${VORTEX_BIN:-}
+if [ -z "$BIN" ]; then
+  case "$(uname -s)-$(uname -m)" in
+    Linux-x86_64) BIN=$ROOT/bin/vortex_dse_full3-linux-x86_64 ;;
+    Darwin-arm64) BIN=$ROOT/bin/vortex_dse_full3-macos-arm64 ;;
+  esac
+fi
+[ -n "$BIN" ] && [ -x "$BIN" ] || { echo "Vortex binary not found (VORTEX_BIN=$BIN). See README → 'Getting the node'."; exit 2; }
 [ -f demo/vehicle_data_pb2.py ] || { echo "run ./setup.sh first"; exit 2; }
 N=${N:-40}; PERIOD=${PERIOD:-0.3}
 VINS=(5YJ3E1EA1NF000001 5YJ3E1EA1NF000002 5YJ3E1EA1NF000003)
