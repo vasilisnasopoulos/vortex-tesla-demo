@@ -42,6 +42,15 @@ server with a read-only deploy key held in this repository's secrets. Forks do
 not receive secrets. This is deliberate: the node is the thing being evaluated,
 not distributed.
 
+## Pick the order yourself
+
+The claim underneath this demo is that the ledger is a function of the *set* of
+records, not of the order they arrived in. You can test that without trusting
+anyone: [**Pick the order**](https://vasilisnasopoulos.github.io/pick-the-order.html)
+takes any integer you choose as a shuffle seed, replays 3,000 transactions to
+5 nodes in that order, and posts the resulting hash. Every seed so far has
+produced the same one.
+
 ## Getting the node, to run it yourself
 
 Ask. Evaluation copies (Linux x86_64 static, macOS arm64) are given on request
