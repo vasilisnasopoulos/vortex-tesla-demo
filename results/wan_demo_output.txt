@@ -1,0 +1,35 @@
+Three cars, three continents, three Vortex devices — and no server.
+  car 1 on a server in Frankfurt → hands its records to its own device only
+  car 2 on a server in Tokyo → hands its records to its own device only
+  car 3 on a server in Los Angeles → hands its records to its own device only
+
+  [t+9s] car 3 (Los Angeles) drops OFF the network
+
+  [t+18s] car 3 is BACK
+[5YJ3E1EA1NF000001] vortex: sent 60 at 3.3333333333333335/s, post failures 0, wall 17.70s
+[5YJ3E1EA1NF000002] vortex: sent 60 at 3.3333333333333335/s, post failures 0, wall 17.70s
+[5YJ3E1EA1NF000003] vortex: sent 60 at 3.3333333333333335/s, post failures 23, wall 17.70s
+
+  letting the network settle (retransmits + anti-entropy)…
+
+What each car holds at the end
+  device                records   digest(seq, hash, body)
+  car 1 Frankfurt         155     a1269930925ffad4
+  car 2 Tokyo             155     a1269930925ffad4
+  car 3 Los Angeles       155     a1269930925ffad4
+
+  SAME LEDGER, BODY INCLUDED, ON ALL THREE CONTINENTS: YES   · records the car that left lacks: 0
+
+  first records in ledger order, decoded back as Tesla fleet-telemetry Payloads:
+    seq    0  vin …001  speed  61.6  soc 79.98  loc (37.4035, -122.2347)
+    seq    1  vin …002  speed  57.3  soc 79.98  loc (37.4857, -122.2447)
+    seq    2  vin …003  speed  59.2  soc 79.98  loc (37.4139, -122.2044)
+    seq    3  vin …001  speed  62.1  soc 79.96  loc (37.4036, -122.2347)
+    seq    4  vin …002  speed  61.1  soc 79.96  loc (37.4857, -122.2447)
+    seq    5  vin …003  speed  64.2  soc 79.96  loc (37.4139, -122.2043)
+  records per car: …001: 60  …002: 60  …003: 35
+
+How fast a car's record reaches the others  (servers' clocks, NTP-synced)
+  car 1 Frankfurt     own device p50    4.8 ms  ·  held by ALL THREE p50  135.6 ms  p90 9704.6 ms  (60 records)
+  car 2 Tokyo         own device p50    3.7 ms  ·  held by ALL THREE p50  121.3 ms  p90 9656.9 ms  (60 records)
+  car 3 Los Angeles   own device p50    3.7 ms  ·  held by ALL THREE p50   73.3 ms  p90   75.2 ms  (35 records)

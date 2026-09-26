@@ -29,6 +29,94 @@ Today (part B) the car talks only to the server — Tesla's README: *"vehicles
 communicate only with the server"* — so the server is the one holder of the
 whole picture. Here (part A) all three cars hold it.
 
+## Across three continents — over the real internet (26 Sep 2026)
+
+The run above is on one machine. This one is not: each car and its device run
+on an ordinary 1-vCPU server in a **different continent**, and the devices talk
+to each other over the public internet.
+
+![three cars on three continents](results/wan_demo.gif)
+
+### What ran
+
+| | |
+|---|---|
+| **Car 1** | a server in **Frankfurt** |
+| **Car 2** | a server in **Tokyo** |
+| **Car 3** | a server in **Los Angeles** |
+
+- On each server: one "car" process and **its own** Vortex device. The car
+  hands each record only to its own device, over HTTP on the same machine. It
+  never talks to another car, and there is no server, broker or leader anywhere.
+- Each car sends **60 real Tesla fleet-telemetry `Payload` messages**
+  (speed, location, state of charge, odometer), about 3 per second. The bytes
+  are the same ones the one-machine demo uses.
+- **Car 3 (Los Angeles) leaves.** About 9 s in, its device is stopped
+  (`SIGTERM`), and about 9 s later it is started again. While it is off, car 3
+  cannot record anything: in a real vehicle the device and the car are one.
+- When the cars finish, the network gets 20 s to settle. Then the three
+  ledgers are compared.
+
+### What came out
+
+```
+device                records   digest(seq, hash, body)
+car 1 Frankfurt         155     a1269930925ffad4
+car 2 Tokyo             155     a1269930925ffad4
+car 3 Los Angeles       155     a1269930925ffad4
+SAME LEDGER, BODY INCLUDED, ON ALL THREE CONTINENTS: YES · records the car that left lacks: 0
+
+car 1 Frankfurt     own device p50 4.8 ms · held by ALL THREE p50 135.6 ms   p90 9704.6 ms
+car 2 Tokyo         own device p50 3.7 ms · held by ALL THREE p50 121.3 ms   p90 9656.9 ms
+car 3 Los Angeles   own device p50 3.7 ms · held by ALL THREE p50  73.3 ms   p90   75.2 ms
+```
+
+Full text of the recorded run: [`results/wan_demo_output.txt`](results/wan_demo_output.txt).
+
+### How to read it
+
+- **`digest`** is a SHA-256 over every record's position, hash **and body**.
+  Three equal digests mean that three machines on three continents hold the
+  same ledger **byte for byte**, not just the same count.
+- **`records the car that left lacks: 0`**: car 3 came back and got from the
+  other two everything they recorded while it was away, through retransmission
+  and anti-entropy. Nobody resent anything by hand.
+- **155 = 60 + 60 + 35.** Cars 1 and 2 got all 60 in. Car 3's device was off
+  for part of the run: 23 of its sends were refused, and those records exist
+  nowhere. That is the expected behaviour — see the note below on the other 2.
+- **`own device` (~4 ms)** is how long a car waits for its own device to accept
+  a record.
+- **`held by ALL THREE` p50 (~70–135 ms)** is how long until the record is on
+  all three continents. This is roughly the one-way time a packet needs between
+  those cities. A record is "held by all three" only when it reaches the
+  farthest one, so each car's figure is its slowest route. For cars 1 and 2
+  that route is Frankfurt–Tokyo. For car 3 it is Los Angeles–Frankfurt, which
+  is faster.
+- **`p90` of ~9.7 s for cars 1 and 2**: these are records they made while car 3
+  was away. They reached car 3 when it came back, which is the point of the demo.
+- **The timestamps come from three different machines**, synchronised with
+  NTP. Trust them to a few milliseconds, not to fractions of one.
+
+### What this does not show
+
+- **No Tesla server over the internet yet.** Part B (Tesla's reference server)
+  still runs on one machine only. The side-by-side over the internet has not
+  been done.
+- **Two records were lost after being accepted.** Car 3 had 37 of its sends
+  accepted, but 35 reached the ledger. When a device is stopped, it can drop a
+  record it has already said "OK" to but not yet sent to the others. This is
+  an open issue.
+- **The GitHub Actions run does not do this.** It needs three servers on three
+  continents, so it cannot run on a GitHub machine. The Actions run is the
+  one-machine version.
+- **One recorded run.** That day there were four clean runs, and all four
+  ended with the same ledger on all three: one with 40 records per car (95 in
+  total), and three with 60 (152, 154, 155). The totals differ because car 3
+  leaves at a slightly different moment each time. A fifth run is not counted:
+  a bug in the harness made it read the previous run's files.
+- No claim here of "trustless" or "fair ordering". What is shown is that there
+  is **no centre**: three equal devices, and the same ledger on all of them.
+
 ## See it run
 
 **On GitHub, live:** open [Actions → *run the demo*](../../actions). Every run is
