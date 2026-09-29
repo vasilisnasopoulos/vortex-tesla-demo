@@ -102,10 +102,15 @@ Full text of the recorded run: [`results/wan_demo_output.txt`](results/wan_demo_
 - **No Tesla server over the internet yet.** Part B (Tesla's reference server)
   still runs on one machine only. The side-by-side over the internet has not
   been done.
-- **Two records were lost after being accepted.** Car 3 had 37 of its sends
-  accepted, but 35 reached the ledger. When a device is stopped, it can drop a
-  record it has already said "OK" to but not yet sent to the others. This is
-  an open issue.
+- **Two records were lost after being accepted — fixed since.** In this run
+  car 3 had 37 of its sends accepted, but 35 reached the ledger: when a device
+  was stopped, it could drop a record it had already said "OK" to but not yet
+  sent to the others. Fixed the same day: a device that is stopping now
+  answers `503` ("stopping, retry") instead of "OK", and sends out what it has
+  already accepted before it exits. Re-tested on stop: before the fix, 8 records
+  lost after an "OK"; after it, 0. The run above was recorded before the fix.
+  Still true: if the device is killed outright (power loss, `SIGKILL`) rather
+  than stopped, what it has accepted but not yet sent is lost.
 - **The GitHub Actions run does not do this.** It needs three servers on three
   continents, so it cannot run on a GitHub machine. The Actions run is the
   one-machine version.
